@@ -1,6 +1,14 @@
 sense2vec: Use NLP to go beyond vanilla word2vec
 ************************************************
 
+❗️❗️❗️ This fork focuses on making s2v work (with spaCy 2.x) in particular to train new
+models (for non-English languages). Please do not use pip to install. Read more under
+installation.
+
+❗️❗️❗️ We also plan to release some models in different languages that have NER+Tagging support
+in spaCy. For requests, open an issue and clearly mention where to find the NER+Tragging
+model for the language you want.
+
 sense2vec (`Trask et. al <https://arxiv.org/abs/1511.06388>`_, 2015) is a nice
 twist on `word2vec <https://en.wikipedia.org/wiki/Word2vec>`_ that lets you
 learn more interesting, detailed and context-sensitive word vectors. For an
@@ -76,6 +84,15 @@ Installation & Setup
 **Python version**   CPython 2.7, 3.4+. Only 64 bit.
 **Package managers** `pip <https://pypi.python.org/pypi/sense2vec>`_ (source packages only)
 ==================== ===
+
+❗️❗️❗️ For this fork to work, you need to clone it first and build and install locally. If you
+already have s2v, remove it first (tested under Python 3 only):
+
+.. code:: bash
+
+    pip uninstall sense2vec
+    python setup.py build
+    python setup.py install
 
 sense2vec releases are available as source packages on pip:
 
@@ -401,4 +418,10 @@ Entity Label    Description
 Training a sense2vec model
 ==========================
 
-**🚧 TODO:** Update training scripts for spaCy v2.x.
+Before training a model you need to have a large enough dataset and preprocess it using `bin/preprocess.py`. For models we release, we use a combination of a full
+Wikipedia articles dump with a large amount of tweets that Twitter classified to be in the same language.
+
+The `bin/train.py` script can be used to train new models. By default the training is done using w2v from Gensim but if you want to use another algorithm like GloVe
+or FastText you can modify `train.py` (FastText example is commented out). We experimented with both w2v and FastText and found that FastText quickly focuses too heavily
+on common POS-tags and hence is most likely not your preferred choice. We also found that using a large number of epochs (>100) drastically overfits your vectors. We use
+the default of 5 everywhere.
