@@ -70,36 +70,43 @@ class Sense2VecComponent(object):
         # even if the component is only created and not added
         Token = doc[0].__class__
         Span = doc[:1].__class__
-        Token.set_extension('in_s2v', getter=lambda t: self.in_s2v(t))
-        Token.set_extension('s2v_freq', getter=lambda t: self.s2v_freq(t))
-        Token.set_extension('s2v_vec', getter=lambda t: self.s2v_vec(t))
-        Token.set_extension('s2v_most_similar', method=lambda t, n: self.s2v_most_sim(t, n, 'ent'))
-        Span.set_extension('in_s2v', getter=lambda s: self.in_s2v(s, 'ent'))
-        Span.set_extension('s2v_freq', getter=lambda s: self.s2v_freq(s, 'ent'))
-        Span.set_extension('s2v_vec', getter=lambda s: self.s2v_vec(s, 'ent'))
-        Span.set_extension('s2v_most_similar', method=lambda s, n: self.s2v_most_sim(s, n, 'ent'))
+        Token.set_extension('in_s2v', getter=lambda t: self.in_s2v(t), force=True)
+        Token.set_extension('s2v_freq', getter=lambda t: self.s2v_freq(t), force=True)
+        Token.set_extension('s2v_vec', getter=lambda t: self.s2v_vec(t), force=True)
+        Token.set_extension('s2v_most_similar', method=lambda t, n: self.s2v_most_sim(t, n), force=True)
+        Token.set_extension('s2v_similarity', method=lambda t, n: self.s2v_similarity(t, n), force=True)
+        Span.set_extension('in_s2v', getter=lambda s: self.in_s2v(s), force=True)
+        Span.set_extension('s2v_freq', getter=lambda s: self.s2v_freq(s), force=True)
+        Span.set_extension('s2v_vec', getter=lambda s: self.s2v_vec(s), force=True)
+        Span.set_extension('s2v_most_similar', method=lambda s, n: self.s2v_most_sim(s, n), force=True)
+        Span.set_extension('s2v_similarity', method=lambda s, n: self.s2v_similarity(s, n), force=True)
 
-    def in_s2v(self, obj, attr='pos'):
-        return self._get_query(obj, attr) in self.s2v
+    def in_s2v(self, obj):
+        return self._get_query(obj) in self.s2v
 
-    def s2v_freq(self, obj, attr='pos'):
-        freq, _ = self.s2v[self._get_query(obj, attr)]
+    def s2v_freq(self, obj):
+        freq, _ = self.s2v[self._get_query(obj)]
         return freq
 
-    def s2v_vec(self, obj, attr='pos'):
-        _, vector = self.s2v[self._get_query(obj, attr)]
+    def s2v_vec(self, obj):
+        _, vector = self.s2v[self._get_query(obj)]
         return vector
-
-    def s2v_most_sim(self, obj, n_similar=10, attr='pos'):
-        _, vector = self.s2v[self._get_query(obj, attr)]
+        
+    def s2v_most_sim(self, obj, n_similar=10):
+        _, vector = self.s2v[self._get_query(obj)]
         words, scores = self.s2v.most_similar(vector, n_similar)
         words = [word.replace('_', ' ') for word in words]
         words = [tuple(word.rsplit('|', 1)) for word in words]
         return list(zip(words, scores))
 
-    def _get_query(self, obj, attr='pos'):
+    def s2v_similarity(self, obj1, obj2):
+        _, vector1 = self.s2v[self._get_query(obj1)]
+        _, vector2 = self.s2v[self._get_query(obj2)]
+        return self.s2v.similarity(vector1, vector2)
+
+    def _get_query(self, obj):
         # no pos_ and label_ shouldn't happen – unless it's an unmerged
         # non-entity Span (in which case we just use the root's pos)
         pos = obj.pos_ if hasattr(obj, 'pos_') else obj.root.pos_
-        sense = obj.ent_type_ if (attr == 'ent' and obj.ent_type_) else pos
+        sense = obj.ent_type_ if (obj.ent_type_) else pos
         return obj.text.replace(' ', '_') + '|' + sense

@@ -443,4 +443,7 @@ from FastText (or any other source, see `spaCy CLI <https://spacy.io/api/cli>`_ 
     nlp.add_pipe(s2v) # Add s2v to pipeline
     doc = nlp("Ik ben in New York") # I am in New York
     doc[3]._.s2v_most_similar(3) # Most similar to New_York|LOC
-    
+
+Pre-trained models:
+
+NL - https://drive.google.com/open?id=1TC_XJwDHNTD5ir68THOj6aaX44M68kCR
