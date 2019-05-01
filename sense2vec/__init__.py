@@ -1,16 +1,19 @@
-# coding: utf8
 from __future__ import unicode_literals
 
 from os import path
 
-from .vectors import VectorMap
-from .about import __version__
+import sys
+import pyximport
+pyximport.install()
+sys.path.append(".")
+from sense2vec.vectors import VectorMap
+from sense2vec.about import __version__
 
 
-def load(vectors_path):
+def load(vectors_path, dim):
     if not path.exists(vectors_path):
         raise IOError("Can't find data directory: {}".format(vectors_path))
-    vector_map = VectorMap(128)
+    vector_map = VectorMap(dim)
     vector_map.load(vectors_path)
     return vector_map
 
@@ -50,8 +53,8 @@ class Sense2VecComponent(object):
     """
     name = 'sense2vec'
 
-    def __init__(self, vectors_path):
-        self.s2v = load(vectors_path)
+    def __init__(self, vectors_path, dim=300):
+        self.s2v = load(vectors_path, dim)
         self.first_run = True
 
     def __call__(self, doc):
@@ -70,7 +73,7 @@ class Sense2VecComponent(object):
         Token.set_extension('in_s2v', getter=lambda t: self.in_s2v(t))
         Token.set_extension('s2v_freq', getter=lambda t: self.s2v_freq(t))
         Token.set_extension('s2v_vec', getter=lambda t: self.s2v_vec(t))
-        Token.set_extension('s2v_most_similar', method=lambda t, n: self.s2v_most_sim(t, n))
+        Token.set_extension('s2v_most_similar', method=lambda t, n: self.s2v_most_sim(t, n, 'ent'))
         Span.set_extension('in_s2v', getter=lambda s: self.in_s2v(s, 'ent'))
         Span.set_extension('s2v_freq', getter=lambda s: self.s2v_freq(s, 'ent'))
         Span.set_extension('s2v_vec', getter=lambda s: self.s2v_vec(s, 'ent'))
@@ -98,5 +101,5 @@ class Sense2VecComponent(object):
         # no pos_ and label_ shouldn't happen – unless it's an unmerged
         # non-entity Span (in which case we just use the root's pos)
         pos = obj.pos_ if hasattr(obj, 'pos_') else obj.root.pos_
-        sense = obj.label_ if (attr == 'ent' and obj.label_) else pos
+        sense = obj.ent_type_ if (attr == 'ent' and obj.ent_type_) else pos
         return obj.text.replace(' ', '_') + '|' + sense
