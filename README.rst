@@ -425,3 +425,22 @@ The ``bin/train.py`` script can be used to train new models. By default the trai
 or FastText you can modify ``train.py`` (FastText example is commented out). We experimented with both w2v and FastText and found that FastText quickly focuses too heavily
 on common POS-tags and hence is most likely not your preferred choice. We also found that using a large number of epochs (>100) drastically overfits your vectors. We use
 the default of 5 everywhere.
+
+Full spaCy pipeline models
+==========================
+We like completeness. Hence we want to have the NER, tagging, parsing, word vectors and sense vectors all combined into one spaCy pipeline.
+One way to do this is as follows, where we load a default spaCy model containing NER, tagging and parsing, add in word vectors downloaded
+from FastText (or any other source, see `spaCy CLI <https://spacy.io/api/cli>`_ on how to do this (init first, then package)) and our own trained sense vectors.
+
+.. code:: python
+
+    import spacy
+    from sense2vec import Sense2VecComponent
+
+    nlp = spacy.load('nl_core_news_sm') # Default spaCy model with NER, tagging, parsing
+    nlp.vocab.vectors.from_disk('[LOCATION_TO_WORD_VECTOR_MODEL]') # Replace here with the word vector model you produced after spacy package
+    s2v = Sense2VecComponent('[LOCATION_TO_S2V_MODEL]', 300) # Replace with the pre-trained s2v model
+    nlp.add_pipe(s2v) # Add s2v to pipeline
+    doc = nlp("Ik ben in New York") # I am in New York
+    doc[3]._.s2v_most_similar(3) # Most similar to New_York|LOC
+    
