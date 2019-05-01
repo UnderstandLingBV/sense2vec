@@ -418,10 +418,10 @@ Entity Label    Description
 Training a sense2vec model
 ==========================
 
-Before training a model you need to have a large enough dataset and preprocess it using `bin/preprocess.py`. For models we release, we use a combination of a full
+Before training a model you need to have a large enough dataset and preprocess it using ``bin/preprocess.py``. For models we release, we use a combination of a full
 Wikipedia articles dump with a large amount of tweets that Twitter classified to be in the same language.
 
-The `bin/train.py` script can be used to train new models. By default the training is done using w2v from Gensim but if you want to use another algorithm like GloVe
-or FastText you can modify `train.py` (FastText example is commented out). We experimented with both w2v and FastText and found that FastText quickly focuses too heavily
+The ``bin/train.py`` script can be used to train new models. By default the training is done using w2v from Gensim but if you want to use another algorithm like GloVe
+or FastText you can modify ``train.py`` (FastText example is commented out). We experimented with both w2v and FastText and found that FastText quickly focuses too heavily
 on common POS-tags and hence is most likely not your preferred choice. We also found that using a large number of epochs (>100) drastically overfits your vectors. We use
 the default of 5 everywhere.
