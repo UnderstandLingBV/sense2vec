@@ -128,7 +128,7 @@ class Sense2VecComponent(object):
         return xp.dot(vector1, vector2) / (self.vector_norm(vector1) * self.vector_norm(vector2))
 
     def get_s2v_doc_vector(self, doc):
-        return sum(self.s2v_vec(t) for t in doc) / len(doc)
+        return sum([self.s2v_vec(t) for t in doc if self.in_s2v(t)]) / len(doc)
 
     def vector_norm(self, vector):
         """The L2 norm of the document's vector representation.
