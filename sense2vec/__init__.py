@@ -8,6 +8,8 @@ pyximport.install()
 sys.path.append(".")
 from sense2vec.vectors import VectorMap
 from sense2vec.about import __version__
+from thinc.neural.util import get_array_module
+from math import sqrt
 
 
 def load(vectors_path, dim):
@@ -34,7 +36,6 @@ def transform_doc(doc):
         np.merge(tag=np.root.tag_, lemma=np.root.lemma_,
                 ent_type=np.root.ent_type_)
     return doc
-
 
 class Sense2VecComponent(object):
     """
@@ -68,8 +69,10 @@ class Sense2VecComponent(object):
         # initialise the attributes here only if the component is added to the
         # pipeline and used – otherwise, tokens will still get the attributes
         # even if the component is only created and not added
+        Doc = doc.__class__
         Token = doc[0].__class__
         Span = doc[:1].__class__
+        Doc.set_extension('s2v_similarity', method=lambda t, n: self.s2v_doc_similarity(t, n), force=True)
         Token.set_extension('in_s2v', getter=lambda t: self.in_s2v(t), force=True)
         Token.set_extension('s2v_freq', getter=lambda t: self.s2v_freq(t), force=True)
         Token.set_extension('s2v_vec', getter=lambda t: self.s2v_vec(t), force=True)
@@ -110,3 +113,29 @@ class Sense2VecComponent(object):
         pos = obj.pos_ if hasattr(obj, 'pos_') else obj.root.pos_
         sense = obj.ent_type_ if (obj.ent_type_) else pos
         return obj.text.replace(' ', '_') + '|' + sense
+        
+    def s2v_doc_similarity(self, obj1, other):
+        """Make a semantic similarity estimate. The default estimate is cosine
+        similarity using an average of word vectors.
+        other (object): The object to compare with. By default, accepts `Doc`,
+            `Span`, `Token` and `Lexeme` objects.
+        RETURNS (float): A scalar similarity score. Higher is more similar.
+        DOCS: https://spacy.io/api/doc#similarity
+        """
+        vector1 = self.get_s2v_doc_vector(obj1)
+        vector2 = self.get_s2v_doc_vector(other)
+        xp = get_array_module(vector1)
+        return xp.dot(vector1, vector2) / (self.vector_norm(vector1) * self.vector_norm(vector2))
+
+    def get_s2v_doc_vector(self, doc):
+        return sum(self.s2v_vec(t) for t in doc) / len(doc)
+
+    def vector_norm(self, vector):
+        """The L2 norm of the document's vector representation.
+        RETURNS (float): The L2 norm of the vector representation.
+        DOCS: https://spacy.io/api/doc#vector_norm
+        """
+        norm = 0.0
+        for value in vector:
+            norm += value * value
+        return sqrt(norm) if norm != 0 else 0
