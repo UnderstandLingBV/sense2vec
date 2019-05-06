@@ -1,6 +1,6 @@
 import gensim, logging
 import plac
-import sys
+import os, sys
 sys.path.append("..")
 from sense2vec.vectors import VectorMap
 
@@ -59,6 +59,8 @@ def main(size, window, min_count, workers, negative, epochs, path, out_path):
         vector_map.borrow(string, freq, vector)
 
     print("saving the model to file...")
+    if not os.path.exists(out_path):
+        os.makedirs(out_path)
     vector_map.save(out_path)
 
 
