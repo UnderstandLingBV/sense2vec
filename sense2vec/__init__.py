@@ -124,11 +124,14 @@ class Sense2VecComponent(object):
         """
         vector1 = self.get_s2v_doc_vector(obj1)
         vector2 = self.get_s2v_doc_vector(other)
+        if len(vector1) == 0 or len(vector2) == 0:
+            return -1.0
         xp = get_array_module(vector1)
         return xp.dot(vector1, vector2) / (self.vector_norm(vector1) * self.vector_norm(vector2))
 
     def get_s2v_doc_vector(self, doc):
-        return sum([self.s2v_vec(t) for t in doc if self.in_s2v(t)]) / len(doc)
+        vectors = [self.s2v_vec(t) for t in doc if self.in_s2v(t)]
+        return [float(sum(col))/len(col) for col in zip(*vectors)]
 
     def vector_norm(self, vector):
         """The L2 norm of the document's vector representation.
